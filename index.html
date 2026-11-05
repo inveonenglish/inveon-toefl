@@ -135,7 +135,7 @@ let CONFIG = {}, BANK = null;
    ===================================================================== */
 
 const TIMES = { // minutes
-  readingM1: 14, readingM2: 13, listeningM1: 12, listeningM2: 12,
+  readingM1: 12, readingM2: 18, listeningM1: 12, listeningM2: 17,
   bas: 7, email: 7, discussion: 10
 };
 let SCALE = 1;        // set from CONFIG after loading
@@ -254,6 +254,44 @@ async function saveSection(section, data) {
     S.unsaved.push(payload);
     try { localStorage.setItem('toefl_backup_' + S.sessionId, JSON.stringify(S.unsaved)); } catch (x) {}
   }
+}
+
+/* ---------- building each student's test from the two-version bank ---------- */
+let TEST = null;
+const LETTERS = 'ABCDEFGH';
+function slotList() {   // [{ id, variants, place }] for every slot in the bank
+  const out = [];
+  ['reading', 'listening'].forEach(sec => ['m1', 'easy', 'hard'].forEach(mod => (BANK[sec][mod] || []).forEach((slot, i) => {
+    out.push({ id: sec[0].toUpperCase() + '.' + mod + '.' + i, variants: Array.isArray(slot) ? slot : [slot], place: [sec, mod, i] });
+  })));
+  [['writing', 'bas', 'W.bas'], ['writing', 'email', 'W.email'], ['writing', 'discussion', 'W.disc'],
+   ['speaking', 'repeat', 'S.repeat'], ['speaking', 'interview', 'S.interview']].forEach(([sec, key, id]) => {
+    const v = BANK[sec][key];
+    const single = !Array.isArray(v) || (key === 'bas' && v.length && !Array.isArray(v[0]));
+    out.push({ id: id, variants: single ? [v] : v, place: [sec, key] });
+  });
+  return out;
+}
+/* used: item ids this student has already had; fixed: ids to reuse exactly (continuing a saved test) */
+function buildTest(used, fixed) {
+  const seen = new Set(used || []), want = {};
+  (fixed || []).forEach(x => { const m = String(x).match(/^(.*?)([A-H])$/); if (m) want[m[1]] = LETTERS.indexOf(m[2]); });
+  const t = { reading: { m1: [], easy: [], hard: [] }, listening: { m1: [], easy: [], hard: [] }, writing: {}, speaking: {}, ids: [] };
+  slotList().forEach(sl => {
+    const n = sl.variants.length;
+    let k = want[sl.id];
+    if (!(k >= 0 && k < n)) {
+      const fresh = [...Array(n).keys()].filter(i => !seen.has(sl.id + LETTERS[i]));
+      const pool = fresh.length ? fresh : [...Array(n).keys()];
+      k = pool[Math.floor(Math.random() * pool.length)];
+    }
+    const id = sl.id + LETTERS[k];
+    t.ids.push(id);
+    const v = sl.variants[k];
+    if (sl.place[0] === 'reading' || sl.place[0] === 'listening') t[sl.place[0]][sl.place[1]].push(Object.assign({ _id: id }, v));
+    else t[sl.place[0]][sl.place[1]] = Array.isArray(v) ? v.map(x => Object.assign({ _id: id }, x)) : Object.assign({ _id: id }, v);
+  });
+  return t;
 }
 
 /* ---------- save and finish later ---------- */
@@ -550,9 +588,9 @@ function signIn() {
     const groups = (CONFIG.groups || []).map(g => '<option>' + esc(g) + '</option>').join('');
     const grades = ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map(g => '<option value="' + g + '">Grade ' + g + '</option>').join('');
     render(
-      '<div class="card"><span class="pill">' + esc(CONFIG.modeLabel) + ' test · Form ' + esc(BANK.form) + '</span>' +
+      '<div class="card"><span class="pill">' + esc(CONFIG.modeLabel) + ' test</span>' +
       '<h1 style="margin-top:10px">' + esc(CONFIG.title) + '</h1>' +
-      '<p class="muted">This test has four parts: Reading, Listening, Writing, and Speaking. It takes about 90 minutes. ' +
+      '<p class="muted">This test has four parts: Reading, Listening, Writing, and Speaking. It takes about 1 hour 45 minutes, and you can save it and finish later. ' +
       'Some questions get harder or easier depending on your answers, so just do your best.</p>' +
       '<div class="field"><label for="nm">Your name (in English)</label><input id="nm" autocomplete="off" placeholder="e.g. Minjun Kim"></div>' +
       '<div class="field"><label for="no">Student number <span class="muted small">(if you have one)</span></label><input id="no" autocomplete="off"></div>' +
@@ -577,6 +615,7 @@ function signIn() {
         S.modeKey = r.modeKey || S.modeKey; S.recFolder = r.recFolder || '';
         if (r.reading) S.reading = r.reading;
         if (r.listening) S.listening = r.listening;
+        S.items = r.items || [];
         setCode(r.code);
         res();
       } catch (err) {
@@ -752,8 +791,15 @@ function runReadingModule(sets, label, minutes) {
       if (finished) return; finished = true; stopTimer(); nav('');
       const items = [];
       pages.forEach(p => {
-        if (p.set.type === 'ctw') p.blanks.forEach((b, i) => items.push({ cat: 'ctw', ok: String(p.answers[i] || '').trim().toLowerCase() === b.missing.toLowerCase() }));
-        else p.set.qs.forEach((q, i) => items.push({ cat: p.set.type, ok: p.answers[i] === q.a }));
+        if (p.set.type === 'ctw') p.blanks.forEach((b, i) => {
+          const typed = String(p.answers[i] || '').trim().toLowerCase(), word = (b.shown + b.missing).toLowerCase();
+          // accept the missing letters, or the whole word typed out
+          const ok = typed === b.missing.toLowerCase() || (typed === word && typed.length > b.missing.length);
+          items.push({ cat: 'ctw', ok: ok, id: p.set._id, n: i + 1, q: b.shown + '_'.repeat(b.missing.length),
+            ans: typed ? (typed === word ? typed : b.shown + typed) : '', key: b.shown + b.missing, part: label });
+        });
+        else p.set.qs.forEach((q, i) => items.push({ cat: p.set.type, ok: p.answers[i] === q.a, id: p.set._id, n: i + 1, q: q.q,
+          ans: p.answers[i] == null ? '' : q.opts[p.answers[i]], key: q.opts[q.a], part: label }));
       });
       resolve(items);
     };
@@ -764,7 +810,7 @@ function runReadingModule(sets, label, minutes) {
       let html;
       if (set.type === 'ctw') {
         const body = p.parts.map(part => part.blank
-          ? '<span class="w"><span class="shown">' + esc(part.blank.shown) + '</span><input data-b="' + part.blank.i + '" maxlength="' + part.blank.missing.length +
+          ? '<span class="w"><span class="shown">' + esc(part.blank.shown) + '</span><input data-b="' + part.blank.i + '" data-shown="' + esc(part.blank.shown.toLowerCase()) + '" data-miss="' + part.blank.missing.length + '" maxlength="' + (part.blank.shown.length + part.blank.missing.length) +
             '" placeholder="' + '_'.repeat(part.blank.missing.length) + '" style="width:calc(' + part.blank.missing.length + ' * (1ch + .32em) + .3em)" value="' + esc(p.answers[part.blank.i]) +
             '" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="' + part.blank.missing.length + ' missing letters"></span>'
           : esc(part.text)).join('');
@@ -787,7 +833,9 @@ function runReadingModule(sets, label, minutes) {
             if (e.key === 'Enter') { e.preventDefault(); const n = $('.ctw input[data-b="' + (+inp.dataset.b + 1) + '"]'); if (n) n.focus(); }
           });
           inp.addEventListener('keyup', e => {
-            if (inp.value.length >= inp.maxLength && /^[a-z]$/i.test(e.key)) { const n = $('.ctw input[data-b="' + (+inp.dataset.b + 1) + '"]'); if (n) n.focus(); }
+            const v = inp.value.toLowerCase(), miss = +inp.dataset.miss;
+            const whole = v.indexOf(inp.dataset.shown) === 0;   // student is typing the whole word
+            if (/^[a-z]$/i.test(e.key) && ((v.length >= miss && !whole) || v.length >= inp.maxLength)) { const n = $('.ctw input[data-b="' + (+inp.dataset.b + 1) + '"]'); if (n) n.focus(); }
           });
         });
         const first = $('.ctw input'); if (first) first.focus();
@@ -842,8 +890,8 @@ function runListeningModule(sets, label, minutes, rate) {
       for (let i = idx; i < sets.length; i++) {
         const st = sets[i];
         if (st._scored) continue;
-        if (st.type === 'response') items.push({ cat: 'response', ok: false });
-        else st.qs.forEach(() => items.push({ cat: st.type, ok: false }));
+        if (st.type === 'response') items.push({ cat: 'response', ok: false, id: st._id, n: 1, q: st.lines[0].t, ans: '(not reached)', key: st.opts[st.a], part: label });
+        else st.qs.forEach((q, k) => items.push({ cat: st.type, ok: false, id: st._id, n: k + 1, q: q.q, ans: '(not reached)', key: q.opts[q.a], part: label }));
       }
       resolve(items);
     };
@@ -901,8 +949,8 @@ function runListeningModule(sets, label, minutes, rate) {
       };
       $('#next').onclick = () => {
         AUDIO.stop();
-        if (isResp) items.push({ cat: 'response', ok: chosen[0] === set.a });
-        else set.qs.forEach((q, i) => items.push({ cat: set.type, ok: chosen[i] === q.a }));
+        if (isResp) items.push({ cat: 'response', ok: chosen[0] === set.a, id: set._id, n: 1, q: set.lines[0].t, ans: set.opts[chosen[0]], key: set.opts[set.a], part: label });
+        else set.qs.forEach((q, i) => items.push({ cat: set.type, ok: chosen[i] === q.a, id: set._id, n: i + 1, q: q.q, ans: q.opts[chosen[i]], key: q.opts[q.a], part: label }));
         set._scored = true;
         idx++; show();
       };
@@ -927,16 +975,17 @@ function band(route, a, b) {
 
 async function readingSection() {
   await intro('Reading', [
-    ['Part 1', 'Complete the Words, Read in Daily Life, Read an Academic Passage', TIMES.readingM1 + ' min'],
-    ['Part 2', 'The same three tasks. The level depends on your Part 1 answers.', TIMES.readingM2 + ' min']
+    ['Part 1', '20 questions: Complete the Words, Read in Daily Life, Read an Academic Passage', TIMES.readingM1 + ' min'],
+    ['Part 2', '30 questions: the same three tasks. The level depends on your Part 1 answers.', TIMES.readingM2 + ' min']
   ], 'You can move back and forth between pages inside each part.');
-  const m1 = await runReadingModule(BANK.reading.m1, 'Part 1', TIMES.readingM1);
+  const m1 = await runReadingModule(TEST.reading.m1, 'Part 1', TIMES.readingM1);
   const t1 = tally(m1);
   const route = t1.c / t1.n >= ROUTE_AT ? 'Harder' : 'Easier';
   await message('Reading Part 1 is finished', '<p>Take a breath. Part 2 starts when you press the button.</p>', 'Start Part 2');
-  const m2 = await runReadingModule(route === 'Harder' ? BANK.reading.hard : BANK.reading.easy, 'Part 2', TIMES.readingM2);
+  const m2 = await runReadingModule(route === 'Harder' ? TEST.reading.hard : TEST.reading.easy, 'Part 2', TIMES.readingM2);
+  m2.forEach(x => { x.part = 'Part 2 (' + route.toLowerCase() + ')'; });
   const t2 = tally(m2), all = m1.concat(m2);
-  const data = { route: route, m1: t1.c + '/' + t1.n, m2: t2.c + '/' + t2.n,
+  const data = { route: route, m1: t1.c + '/' + t1.n, m2: t2.c + '/' + t2.n, detail: all,
     cats: { ctw: catPct(all, 'ctw'), daily: catPct(all, 'daily'), academic: catPct(all, 'academic') },
     band: band(route, t1, t2) };
   S.reading = data;
@@ -945,18 +994,19 @@ async function readingSection() {
 
 async function listeningSection() {
   await intro('Listening', [
-    ['Part 1', 'Choose a Response, Conversation, Announcement, Academic Talk', TIMES.listeningM1 + ' min'],
-    ['Part 2', 'The same four tasks. The level depends on your Part 1 answers.', TIMES.listeningM2 + ' min']
+    ['Part 1', '18 questions: Choose a Response, Conversations, an Announcement, an Academic Talk', TIMES.listeningM1 + ' min'],
+    ['Part 2', '27 questions: the same four tasks. The level depends on your Part 1 answers.', TIMES.listeningM2 + ' min']
   ], 'Each recording plays <b>one time only</b>. You cannot go back to earlier questions.');
-  await loadingAudio(linesOf(BANK.listening.m1));
-  const m1 = await runListeningModule(BANK.listening.m1, 'Part 1', TIMES.listeningM1, 0.95);
+  await loadingAudio(linesOf(TEST.listening.m1));
+  const m1 = await runListeningModule(TEST.listening.m1, 'Part 1', TIMES.listeningM1, 0.95);
   const t1 = tally(m1);
   const route = t1.c / t1.n >= ROUTE_AT ? 'Harder' : 'Easier';
   await message('Listening Part 1 is finished', '<p>Part 2 starts when you press the button.</p>', 'Start Part 2');
-  await loadingAudio(linesOf(route === 'Harder' ? BANK.listening.hard : BANK.listening.easy));
-  const m2 = await runListeningModule(route === 'Harder' ? BANK.listening.hard : BANK.listening.easy, 'Part 2', TIMES.listeningM2, route === 'Harder' ? 1 : 0.95);
+  await loadingAudio(linesOf(route === 'Harder' ? TEST.listening.hard : TEST.listening.easy));
+  const m2 = await runListeningModule(route === 'Harder' ? TEST.listening.hard : TEST.listening.easy, 'Part 2', TIMES.listeningM2, route === 'Harder' ? 1 : 0.95);
+  m2.forEach(x => { x.part = 'Part 2 (' + route.toLowerCase() + ')'; });
   const t2 = tally(m2), all = m1.concat(m2);
-  const data = { route: route, m1: t1.c + '/' + t1.n, m2: t2.c + '/' + t2.n,
+  const data = { route: route, m1: t1.c + '/' + t1.n, m2: t2.c + '/' + t2.n, detail: all,
     cats: { response: catPct(all, 'response'), conversation: catPct(all, 'conversation'), announcement: catPct(all, 'announcement'), talk: catPct(all, 'talk') },
     band: band(route, t1, t2), audioProblems: TTS.problems };
   S.listening = data;
@@ -976,11 +1026,15 @@ function runBuildSentence(items, minutes) {
     const finish = () => {
       if (finished) return; finished = true; stopTimer(); nav('');
       let c = 0;
-      st.forEach(s => {
+      const detail = [];
+      st.forEach((s, k) => {
         const txt = s.placed.map(id => id === null ? null : s.pool.find(p => p.id === id).t);
-        if (txt.every((t, i) => t === s.it.chunks[i])) c++;
+        const ok = txt.every((t, i) => t === s.it.chunks[i]);
+        if (ok) c++;
+        detail.push({ cat: 'bas', ok: ok, id: s.it._id, n: k + 1, q: s.it.prompt,
+          ans: txt.map(t => t === null ? '___' : t).join(' ') + s.it.end, key: s.it.chunks.join(' ') + s.it.end, part: 'Build a Sentence' });
       });
-      resolve(c);
+      resolve({ c: c, detail: detail });
     };
     const show = () => {
       const s = st[idx];
@@ -1062,15 +1116,15 @@ function runDiscussion(task, minutes) {
 async function writingSection() {
   await intro('Writing', [
     ['Build a Sentence', 'Put words in the right order (10 sentences)', TIMES.bas + ' min'],
-    ['Write an Email', 'Write a short email to a friend', TIMES.email + ' min'],
+    ['Write an Email', 'Write a short email', TIMES.email + ' min'],
     ['Academic Discussion', 'Give your opinion on a class discussion board', TIMES.discussion + ' min']
   ], 'Spell check is turned off, just like the real test.');
-  const bas = await runBuildSentence(BANK.writing.bas, TIMES.bas);
+  const basOut = await runBuildSentence(TEST.writing.bas, TIMES.bas), bas = basOut.c;
   await message('Next: Write an Email', '<p>You will have ' + TIMES.email + ' minutes.</p>', 'Start');
-  const email = await runEmail(BANK.writing.email, TIMES.email);
+  const email = await runEmail(TEST.writing.email, TIMES.email);
   await message('Next: Academic Discussion', '<p>You will have ' + TIMES.discussion + ' minutes.</p>', 'Start');
-  const disc = await runDiscussion(BANK.writing.discussion, TIMES.discussion);
-  const data = { bas: bas, basTotal: BANK.writing.bas.length, email: email, emailWords: words(email), disc: disc, discWords: words(disc) };
+  const disc = await runDiscussion(TEST.writing.discussion, TIMES.discussion);
+  const data = { bas: bas, basTotal: TEST.writing.bas.length, email: email, emailWords: words(email), disc: disc, discWords: words(disc), detail: basOut.detail };
   S.writing = data;
   await saveSection('writing', data);
 }
@@ -1117,7 +1171,7 @@ async function speakingSection() {
     await saveSection('speaking', { mic: micNote, folderUrl: '' });
     return;
   }
-  const rp = BANK.speaking.repeat, iv = BANK.speaking.interview;
+  const rp = TEST.speaking.repeat, iv = TEST.speaking.interview;
   await loadingAudio(rp.items.map(it => ({ s: 'F', t: it.t })).concat([{ s: 'M', t: iv.intro }], iv.items.map(it => ({ s: 'M', t: it.t }))));
 
   // Listen and Repeat
@@ -1219,6 +1273,13 @@ window.addEventListener('beforeunload', e => { if (S.inTest || S.unsaved.length)
   $('#stopBtn').onclick = () => stopAndSave(true);
   await signIn();
   if (S.resumed && !nextPart()) { await finishScreen(); return; }
+  if (S.resumed) {
+    TEST = buildTest([], S.items || []);
+  } else {
+    let used = [];
+    try { used = await callRetry('usedItems', { student: S.student.name, studentNo: S.student.no }, 2) || []; } catch (e) {}
+    TEST = buildTest(used, null);
+  }
   await deviceCheck();
   S.inTest = true;
   S.sittingStart = Date.now();
@@ -1227,7 +1288,7 @@ window.addEventListener('beforeunload', e => { if (S.inTest || S.unsaved.length)
     await message('Welcome back, ' + S.student.name.split(' ')[0], '<p>Your finished parts are saved. You will start at <b>' + esc(PART_NAMES[nextPart()]) + '</b>.</p>', 'Continue');
   } else {
     S.started = new Date().toISOString();
-    await saveSection('start', {});
+    await saveSection('start', { items: TEST.ids });
   }
   const RUN = { reading: readingSection, listening: listeningSection, writing: writingSection, speaking: speakingSection };
   for (const p of PARTS) {
