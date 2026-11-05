@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inveon TOEFL Test</title>
+<style>
+  :root {
+    --ink: #1d1f23; --muted: #5d636e; --line: #d9dde3; --soft: #f3f5f8;
+    --paper: #ffffff; --bg: #eef1f5; --accent: #1f3a5f; --accent-soft: #e4ebf4;
+    --good: #1e6b45; --warn: #9a5b00; --bad: #a12a2a; --rec: #c62828;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.55 "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", Roboto, Helvetica, Arial, sans-serif; }
+  button { font: inherit; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+  .bar { position: sticky; top: 0; z-index: 5; background: var(--accent); color: #fff;
+    display: flex; align-items: center; gap: 16px; padding: 10px 20px; min-height: 52px; }
+  .bar .brand { font-weight: 700; letter-spacing: .02em; }
+  .bar .where { flex: 1; font-size: 15px; opacity: .9; }
+  .bar .code { font-size: 13px; opacity: .85; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  .stopbtn { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.6); border-radius: 6px; padding: 4px 12px; font-size: 14px; font-weight: 600; }
+  .stopbtn:hover { background: rgba(255,255,255,.12); }
+  .bigcode { font: 700 44px/1.1 Consolas, "Courier New", monospace; letter-spacing: .18em; color: var(--accent);
+    border: 2px dashed var(--accent); border-radius: 10px; padding: 14px 22px; display: inline-block; margin: 8px 0 4px; }
+  .resume { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .resume input { text-transform: uppercase; letter-spacing: .15em; font-family: Consolas, "Courier New", monospace; }
+  .bar .timer { font-variant-numeric: tabular-nums; font-weight: 700; background: rgba(255,255,255,.15);
+    padding: 3px 12px; border-radius: 6px; min-width: 72px; text-align: center; }
+  .bar .timer.low { background: #b3261e; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 120px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 28px 32px; }
+  .card + .card { margin-top: 18px; }
+  h1 { font-size: 28px; margin: 0 0 6px; }
+  h2 { font-size: 22px; margin: 0 0 12px; }
+  h3 { font-size: 18px; margin: 0 0 10px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 11px 24px; font-weight: 600; }
+  .btn:disabled { background: #9aa6b6; cursor: not-allowed; }
+  .btn.ghost { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
+  .btn.ghost:disabled { color: #9aa6b6; border-color: #c5ccd6; background: #fff; }
+  .btn.big { padding: 14px 32px; font-size: 18px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line);
+    padding: 12px 20px; display: flex; justify-content: center; gap: 12px; z-index: 5; }
+  .nav .spacer { flex: 1; max-width: 760px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field select { width: 100%; max-width: 420px; padding: 10px 12px; border: 1px solid #b9c0ca; border-radius: 8px; background: #fff; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--accent); }
+  .steps { margin: 14px 0 0; padding-left: 22px; }
+  .steps li { margin-bottom: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } .card { padding: 22px 18px; } }
+  .passage { white-space: pre-wrap; }
+  .passage p { margin: 0 0 12px; }
+  .notice { white-space: pre-wrap; font-family: Consolas, "Courier New", monospace; font-size: 15.5px;
+    background: var(--soft); border: 1px dashed #b9c0ca; border-radius: 8px; padding: 16px 18px; }
+  .q { margin-bottom: 22px; }
+  .q .stem { font-weight: 600; margin-bottom: 8px; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid var(--line); border-radius: 8px;
+    padding: 9px 12px; margin-bottom: 7px; cursor: pointer; background: #fff; }
+  .opt:hover { border-color: #9aa6b6; }
+  .opt input { margin-top: 5px; }
+  .opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .ctw { line-height: 2.3; font-size: 18px; }
+  .ctw .w { white-space: nowrap; }
+  .ctw input { border: 0; border-bottom: 2px solid var(--accent); background: var(--accent-soft); padding: 0 2px;
+    font-size: 18px; text-align: left; border-radius: 3px 3px 0 0; outline: none;
+    font-family: Consolas, "Courier New", monospace; letter-spacing: .32em; }
+  .ctw input::placeholder { color: #7d8796; opacity: 1; }
+  .ctw input:focus { background: #d3e0ef; }
+  .ctw .shown { font-family: Consolas, "Courier New", monospace; letter-spacing: .06em; }
+  .listen { text-align: center; padding: 34px 20px; }
+  .listen svg { width: 92px; height: 92px; }
+  .pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+  .bubble { background: var(--soft); border-radius: 12px; padding: 12px 16px; display: inline-block; max-width: 640px; }
+  .bubble.you { background: var(--accent-soft); }
+  .who { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .slots { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 48px; }
+  .slot { display: inline-block; min-width: 86px; height: 40px; border-bottom: 2px solid #8a94a3; }
+  .chip { border: 1.5px solid #8a94a3; background: #fff; border-radius: 8px; padding: 6px 14px; font-size: 17px; }
+  .chip:hover { border-color: var(--accent); }
+  .chip.placed { background: var(--accent-soft); border-color: var(--accent); }
+  .pool { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding: 16px; background: var(--soft); border-radius: 10px; min-height: 64px; }
+  .punct { font-size: 22px; font-weight: 700; }
+  textarea.resp { width: 100%; min-height: 260px; padding: 14px; border: 1px solid #b9c0ca; border-radius: 8px; resize: vertical; line-height: 1.6; }
+  .wc { font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .wc.ok { color: var(--good); }
+  .post { border-left: 4px solid var(--line); padding: 4px 0 4px 14px; margin: 12px 0; }
+  .post.prof { border-color: var(--accent); }
+  .meter { height: 12px; background: var(--soft); border-radius: 6px; overflow: hidden; width: 260px; }
+  .meter > div { height: 100%; width: 0; background: var(--good); transition: width .08s; }
+  .recbox { text-align: center; padding: 30px 10px; }
+  .recdot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--rec); margin-right: 8px; vertical-align: middle; }
+  .progress { height: 10px; background: var(--soft); border-radius: 6px; overflow: hidden; max-width: 460px; margin: 16px auto 0; }
+  .progress > div { height: 100%; background: var(--rec); width: 0; }
+  .status-ok { color: var(--good); font-weight: 600; }
+  .status-bad { color: var(--bad); font-weight: 600; }
+  .warnbox { background: #fff6e5; border: 1px solid #f0c674; border-radius: 8px; padding: 12px 16px; margin-top: 14px; }
+  .errbox { background: #fdecec; border: 1px solid #e6a1a1; border-radius: 8px; padding: 12px 16px; margin-top: 14px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(20,24,30,.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px 26px; max-width: 460px; width: 100%; }
+  .modal .row { justify-content: flex-end; margin-top: 18px; }
+  .tasklist { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .tasklist td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tasklist td:last-child { text-align: right; white-space: nowrap; color: var(--muted); }
+  .score { font-size: 40px; font-weight: 700; color: var(--accent); }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="brand">INVEON TOEFL</div>
+  <div class="where" id="where"></div>
+  <div class="code hide" id="codeTag"></div>
+  <button class="stopbtn hide" id="stopBtn">Save &amp; stop</button>
+  <div class="timer hide" id="timer">--:--</div>
+</div>
+<div class="wrap" id="app"></div>
+<div id="navHost"></div>
+
+<script src="config.js"></script>
+<script>
+/* Settings and questions are loaded from the score sheet (Apps Script) when the page opens. */
+let CONFIG = {}, BANK = null;
+/* =====================================================================
+   INVEON TOEFL DIAGNOSTIC — TEST ENGINE
+   Reading and Listening are two-stage adaptive: Module 1 routes each
+   student to an easier or harder Module 2.
+   ===================================================================== */
+
+const TIMES = { // minutes
+  readingM1: 14, readingM2: 13, listeningM1: 12, listeningM2: 12,
+  bas: 7, email: 7, discussion: 10
+};
+let SCALE = 1;        // set from CONFIG after loading
+let ROUTE_AT = 0.6;
+
+const S = {
+  sessionId: 'T' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(),
+  started: null, student: {}, micOk: false, soundOk: false,
+  unsaved: [], recFolder: '', recFails: 0, uploads: [], inTest: false,
+  code: '', done: [], current: '', stopped: false, resumed: false, modeKey: '', sittingStart: Date.now()
+};
+const PART_NAMES = { reading: 'Reading', listening: 'Listening', writing: 'Writing', speaking: 'Speaking' };
+const PARTS = ['reading', 'listening', 'writing', 'speaking'];
+
+/* ---------- small helpers ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function words(t) { return String(t || '').trim().split(/\s+/).filter(Boolean).length; }
+function paras(t) { return String(t).split(/\n\s*\n/).map(p => '<p>' + esc(p) + '</p>').join(''); }
+function pct(c, n) { return n ? Math.round(c / n * 1000) / 1000 : ''; }
+function render(html) { $('#app').innerHTML = html; window.scrollTo(0, 0); }
+function nav(html) { $('#navHost').innerHTML = html ? '<div class="nav">' + html + '</div>' : ''; }
+function where(t) { $('#where').textContent = t || ''; }
+
+function modal(msg, okText, cancelText) {
+  return new Promise(res => {
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = '<div class="modal"><div>' + msg + '</div><div class="row">' +
+      (cancelText ? '<button class="btn ghost" data-v="0">' + esc(cancelText) + '</button>' : '') +
+      '<button class="btn" data-v="1">' + esc(okText || 'OK') + '</button></div></div>';
+    bg.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { bg.remove(); res(b.dataset.v === '1'); } });
+    document.body.appendChild(bg);
+  });
+}
+
+/* ---------- timer ---------- */
+const TIMER = { id: null, end: 0, cb: null };
+function startTimer(minutes, onEnd) {
+  stopTimer();
+  TIMER.end = Date.now() + minutes * 60000 * SCALE;
+  TIMER.cb = onEnd;
+  const box = $('#timer');
+  box.classList.remove('hide');
+  const tick = () => {
+    const left = Math.max(0, Math.round((TIMER.end - Date.now()) / 1000));
+    box.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+    box.classList.toggle('low', left <= 60);
+    if (left <= 0) { const cb = TIMER.cb; stopTimer(); if (cb) cb(); }
+  };
+  tick();
+  TIMER.id = setInterval(tick, 250);
+}
+function stopTimer() { if (TIMER.id) clearInterval(TIMER.id); TIMER.id = null; TIMER.cb = null; $('#timer').classList.add('hide'); }
+/* Directions screens don't count against section time, like the real test. */
+function pauseTimer() { if (!TIMER.id) return null; const left = TIMER.end - Date.now(), cb = TIMER.cb; clearInterval(TIMER.id); TIMER.id = null; return { left: left, cb: cb }; }
+function resumeTimer(p) { if (!p) return; startTimer(p.left / 60000 / SCALE, p.cb); }
+
+/* ---------- server ---------- */
+function apiUrl() {
+  const u = String(window.API_URL || '').trim();
+  return /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(u) ? u : '';
+}
+async function callServer(fn, payload) {
+  if (!apiUrl()) throw new Error('No connection to the score sheet.');
+  // text/plain keeps this a "simple" request, which Apps Script accepts from another site
+  const r = await fetch(apiUrl(), { method: 'POST', body: JSON.stringify({ fn: fn, payload: payload }), redirect: 'follow' });
+  if (!r.ok) throw new Error('Server error ' + r.status);
+  const out = await r.json();
+  if (!out || out.ok === false) throw new Error((out && out.error) || 'Server error');
+  return out.result;
+}
+async function loadTest() {
+  const mode = (new URLSearchParams(location.search).get('mode') || 'practice').toLowerCase();
+  if (!apiUrl()) throw new Error('This test page is not connected to the score sheet yet. Teacher: paste the web app address into config.js.');
+  let last;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await fetch(apiUrl() + '?api=init&mode=' + encodeURIComponent(mode), { redirect: 'follow' });
+      const out = await r.json();
+      if (out && out.ok) {
+        CONFIG = out.config; BANK = out.bank;
+        SCALE = Number(CONFIG.timeScale) || 1;
+        ROUTE_AT = Number(CONFIG.routing) || 0.6;
+        document.title = CONFIG.title || document.title;
+        return;
+      }
+      last = new Error((out && out.error) || 'Could not load the test.');
+    } catch (e) { last = e; }
+    await sleep(1500 * (i + 1));
+  }
+  throw last;
+}
+async function callRetry(fn, payload, tries) {
+  let last;
+  for (let i = 0; i < (tries || 3); i++) {
+    try { return await callServer(fn, payload); } catch (e) { last = e; await sleep(1500 * (i + 1)); }
+  }
+  throw last;
+}
+function base() {
+  return { sessionId: S.sessionId, student: S.student.name, studentNo: S.student.no, grade: S.student.grade,
+    group: S.student.group, mode: CONFIG.modeLabel, form: BANK.form, started: S.started };
+}
+async function saveSection(section, data) {
+  const payload = Object.assign(base(), { section: section, data: data });
+  if (PART_NAMES[section] && S.done.indexOf(section) < 0) S.done.push(section);
+  try {
+    const r = await callRetry('saveSection', payload, 3);
+    if (r && r.code && !S.code) setCode(r.code);
+    return r;
+  } catch (e) {
+    S.unsaved.push(payload);
+    try { localStorage.setItem('toefl_backup_' + S.sessionId, JSON.stringify(S.unsaved)); } catch (x) {}
+  }
+}
+
+/* ---------- save and finish later ---------- */
+function setCode(code) {
+  S.code = code;
+  const t = $('#codeTag'); t.textContent = 'Code ' + code; t.classList.remove('hide');
+  try { localStorage.setItem('toefl_resume', JSON.stringify({ code: code, name: S.student.name })); } catch (e) {}
+}
+function showStop(on) { $('#stopBtn').classList.toggle('hide', !on); }
+function sittingMinutes() { return Math.max(0, Math.round((Date.now() - S.sittingStart) / 60000)); }
+function nextPart() { return PARTS.find(p => S.done.indexOf(p) < 0); }
+
+async function stopAndSave(midPart) {
+  if (S.stopped) return;
+  if (midPart && !(await modal('<b>Save and finish later?</b><p>Finished parts are saved. The part you are doing now (<b>' + esc(PART_NAMES[S.current] || 'this part') +
+      '</b>) will start again from the beginning next time.</p>', 'Save and stop', 'Keep going'))) return;
+  S.stopped = true; S.inTest = false;
+  stopTimer(); nav(''); showStop(false);
+  try { speechSynthesis.cancel(); } catch (e) {}
+  try { AUDIO.stop(); } catch (e) {}
+  where('Saved');
+  render('<div class="card"><h2>Saving…</h2></div>');
+  await Promise.allSettled(S.uploads);
+  await saveSection('pause', { minutes: sittingMinutes(), next: nextPart() || '' });
+  const drawn = () => {
+    const done = S.done.filter(p => PART_NAMES[p]).map(p => PART_NAMES[p]);
+    let html = '<div class="card"><h1>Your test is saved</h1>';
+    if (S.code) {
+      html += '<p>Write down your code:</p><div class="bigcode">' + esc(S.code) + '</div>' +
+        '<p style="margin-top:14px">Next time, open the same test link, press <b>Continue a saved test</b>, and type this code.</p>';
+    } else {
+      html += '<p>Please tell your teacher your name so they can find your test.</p>';
+    }
+    html += '<p class="muted">Finished: ' + (done.length ? done.join(', ') : 'nothing yet') + '. Next time you start at <b>' + esc(PART_NAMES[nextPart()] || '') + '</b>.</p>';
+    if (S.unsaved.length) {
+      html += '<div class="errbox"><b>Some answers did not save.</b> Teacher: check the internet connection, then press Retry. Do not close this page.' +
+        '<p style="margin:10px 0 0"><button class="btn" id="retry">Retry saving</button></p></div>';
+    }
+    html += '</div>';
+    render(html);
+    if ($('#retry')) $('#retry').onclick = async () => {
+      $('#retry').disabled = true; $('#retry').textContent = 'Saving…';
+      const list = S.unsaved.splice(0);
+      for (const p of list) { try { await callRetry('saveSection', p, 2); } catch (e) { S.unsaved.push(p); } }
+      drawn();
+    };
+  };
+  drawn();
+}
+
+/* ---------- audio: text-to-speech ---------- */
+const TTS = {
+  voices: [], f: null, m: null, fPitch: 1.05, mPitch: 1, problems: 0,
+  init() {
+    return new Promise(res => {
+      if (!('speechSynthesis' in window)) { res(false); return; }
+      let done = false;
+      const load = () => {
+        this.voices = speechSynthesis.getVoices() || [];
+        if (this.voices.length && !done) { done = true; this.pick(); res(true); }
+      };
+      load();
+      if (!done) {
+        speechSynthesis.onvoiceschanged = load;
+        setTimeout(() => { if (!done) { done = true; this.pick(); res(this.voices.length > 0); } }, 3000);
+      }
+    });
+  },
+  pick() {
+    const en = this.voices.filter(v => /^en[-_]/i.test(v.lang));
+    const us = en.filter(v => /US/i.test(v.lang));
+    const pool = en.length ? en : this.voices;
+    const find = (re, list) => (list || pool).find(v => re.test(v.name));
+    const FEM = /Google US English|Samantha|Aria|Jenny|Zira|Ava|Allison|Susan|Karen|Moira|Serena|Libby|Sonia|Female/i;
+    const MAL = /Google UK English Male|Guy|Davis|David|Daniel|Alex\b|Fred|Mark|Male|Christopher|Eric|Ryan|Tom|Aaron|Arthur/i;
+    this.f = find(FEM, us) || find(FEM) || us[0] || pool[0] || null;
+    this.m = find(MAL, us) || find(MAL) || null;
+    if (!this.m || this.m === this.f) { this.m = this.f; this.mPitch = 0.72; this.fPitch = 1.15; }
+  },
+  one(text, who, rate) {
+    return new Promise(res => {
+      const u = new SpeechSynthesisUtterance(text);
+      const v = who === 'M' ? this.m : this.f;   // narrator (N) falls back to the female voice
+      if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'en-US'; }
+      u.pitch = who === 'M' ? this.mPitch : this.fPitch;
+      u.rate = rate || 0.95;
+      let done = false;
+      const fin = () => { if (!done) { done = true; clearTimeout(t); res(); } };
+      u.onend = fin;
+      u.onerror = e => { if (e && e.error && !/interrupted|canceled/.test(e.error)) TTS.problems++; fin(); };
+      const t = setTimeout(fin, (words(text) * 0.6 / u.rate + 4) * 1000);
+      try { speechSynthesis.speak(u); } catch (e) { TTS.problems++; fin(); }
+    });
+  },
+  async lines(lines, rate) {
+    let prev = null;
+    for (const ln of lines) {
+      if (S.stopped) return;
+      if (prev && prev !== ln.s) await sleep(350);
+      prev = ln.s;
+      const url = AUDIO.url(ln);
+      if (url && await AUDIO.play(url)) continue;     // ElevenLabs clip
+      await this.browserLine(ln, rate);               // fallback: browser voice
+    }
+  },
+  async browserLine(ln, rate) {
+    if (!('speechSynthesis' in window)) { this.problems++; await sleep(1500); return; }
+    if (!this.voices.length) await this.init();
+    {
+      const parts = String(ln.t).match(/[^.!?]+[.!?]+["')]?(\s|$)|[^.!?]+$/g) || [ln.t];
+      for (const p of parts) { const s = p.trim(); if (s) { try { await this.one(s, ln.s, rate); } catch (e) { this.problems++; } } }
+    }
+  }
+};
+
+/* ---------- audio: ElevenLabs clips made by the score sheet ---------- */
+const AUDIO = {
+  cache: {},
+  keyFor(ln) { return (CONFIG.audio || {})[ln.s + '|' + ln.t] || ''; },
+  url(ln) { return this.cache[this.keyFor(ln)] || ''; },
+  async preload(lines) {
+    const keys = [...new Set(lines.map(l => this.keyFor(l)).filter(k => k && !this.cache[k]))];
+    for (let i = 0; i < keys.length; i += 8) {
+      let got = {};
+      try { got = await callRetry('getAudio', keys.slice(i, i + 8), 2) || {}; } catch (e) {}
+      Object.keys(got).forEach(k => {
+        try {
+          const bin = atob(got[k]), u8 = new Uint8Array(bin.length);
+          for (let j = 0; j < bin.length; j++) u8[j] = bin.charCodeAt(j);
+          this.cache[k] = URL.createObjectURL(new Blob([u8], { type: 'audio/mpeg' }));
+        } catch (e) {}
+      });
+      await Promise.all(Object.keys(got).map(k => new Promise(r => {
+        if (!this.cache[k]) return r();
+        const a = new Audio(); a.preload = 'metadata';
+        const t = setTimeout(r, 3000);
+        a.onloadedmetadata = () => { if (isFinite(a.duration)) this.dur[k] = a.duration; clearTimeout(t); r(); };
+        a.onerror = () => { clearTimeout(t); r(); };
+        a.src = this.cache[k];
+      })));
+    }
+  },
+  current: null,
+  dur: {},
+  seconds(lines) {   // real length when clips are loaded, otherwise an estimate
+    let t = 0;
+    lines.forEach(l => {
+      const d = this.dur[this.keyFor(l)], est = words(l.t) / 2.3 + 0.4;
+      t += (d > 0 && d > est * 0.5) ? d : est;   // ignore a clip length that can't be right
+    });
+    return t;
+  },
+  stop() { try { if (this.current) { this.current.pause(); this.current.onended && this.current.onended(); } } catch (e) {} },
+  play(url) {
+    return new Promise(res => {
+      const a = new Audio(url);
+      this.current = a;
+      let done = false;
+      const fin = ok => { if (!done) { done = true; clearTimeout(t); res(ok); } };
+      const t = setTimeout(() => fin(true), 120000);
+      a.onended = () => fin(true);
+      a.onerror = () => fin(false);
+      a.play().catch(() => fin(false));
+    });
+  }
+};
+const ANSWER_ONE = 'Now answer the question.', ANSWER_MANY = 'Now answer the questions.';
+const L_TITLES = { response: 'Listen and Choose a Response', conversation: 'Listen to a Conversation', announcement: 'Listen to an Announcement', talk: 'Listen to an Academic Talk' };
+function dirOf(type) { return ((BANK.listening.directions || {})[type]) || ''; }
+function linesOf(sets) {
+  const out = [];
+  const types = [...new Set(sets.map(s => s.type))];
+  types.forEach(t => { if (dirOf(t)) out.push({ s: 'N', t: dirOf(t) }); });
+  sets.forEach(s => { if (s.intro) out.push({ s: 'N', t: s.intro }); out.push(...(s.lines || [])); });
+  out.push({ s: 'N', t: ANSWER_ONE }, { s: 'N', t: ANSWER_MANY });
+  return out;
+}
+/* Soft two-note chime: up = recording starting, down = recording finished. */
+function chime(up) {
+  return new Promise(res => {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+      const notes = up ? [523.25, 659.25] : [659.25, 523.25];
+      notes.forEach((f, i) => {
+        const o = AC.createOscillator(), g = AC.createGain(), t0 = AC.currentTime + i * 0.22;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.15, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.4);
+        o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + 0.45);
+      });
+      setTimeout(res, 700);
+    } catch (e) { res(); }
+  });
+}
+function lengthLabel(sec) {
+  if (sec < 50) return 'about ' + Math.max(5, Math.round(sec / 5) * 5) + ' seconds';
+  const m = Math.round(sec / 30) / 2;
+  return 'about ' + (m === 1 ? '1 minute' : (m % 1 ? Math.floor(m) + '½' : m) + ' minutes');
+}
+async function loadingAudio(lines) {
+  const need = lines.some(l => AUDIO.keyFor(l) && !AUDIO.url(l));
+  if (!need) return;
+  render('<div class="card"><h2>Loading audio…</h2><p class="muted">This takes a few seconds.</p></div>');
+  await AUDIO.preload(lines);
+}
+let AC = null;
+function beep() {
+  return new Promise(res => {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.frequency.value = 880; g.gain.value = 0.12;
+      o.connect(g); g.connect(AC.destination); o.start();
+      setTimeout(() => { try { o.stop(); } catch (e) {} res(); }, 260);
+    } catch (e) { res(); }
+  });
+}
+
+/* ---------- audio: microphone ---------- */
+let MIC = null;
+async function getMic() {
+  if (MIC && MIC.active) return MIC;
+  MIC = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  return MIC;
+}
+function pickMime() {
+  const c = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+  for (const m of c) if (MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+function startRecording() {
+  const mime = pickMime();
+  const rec = mime ? new MediaRecorder(MIC, { mimeType: mime }) : new MediaRecorder(MIC);
+  const chunks = [];
+  const done = new Promise((res, rej) => {
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => res(new Blob(chunks, { type: rec.mimeType || mime || 'audio/webm' }));
+    rec.onerror = e => rej(e.error || e);
+  });
+  rec.start(500);
+  return { done: done, stop: () => { if (rec.state !== 'inactive') rec.stop(); } };
+}
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(',')[1] || '');
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+function uploadRecording(label, blob) {
+  const p = (async () => {
+    const data = await blobToBase64(blob);
+    const res = await callRetry('saveRecording', { sessionId: S.sessionId, student: S.student.name, label: label, mime: blob.type, data: data }, 3);
+    if (res && res.folderUrl) S.recFolder = res.folderUrl;
+    return res;
+  })().catch(e => { S.recFails++; throw e; });
+  S.uploads.push(p);
+  return p;
+}
+function meter(stream, bar) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const src = AC.createMediaStreamSource(stream);
+    const an = AC.createAnalyser(); an.fftSize = 512; src.connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    let on = true;
+    const loop = () => {
+      if (!on) return;
+      an.getByteTimeDomainData(buf);
+      let peak = 0; for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
+      bar.style.width = Math.min(100, peak / 64 * 100) + '%';
+      requestAnimationFrame(loop);
+    };
+    loop();
+    return () => { on = false; try { src.disconnect(); } catch (e) {} };
+  } catch (e) { return () => {}; }
+}
+
+/* ---------- icons ---------- */
+const ICON_EAR = '<svg viewBox="0 0 64 64" fill="none" stroke="#1f3a5f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 26a14 14 0 0 1 28 0c0 9-8 11-8 19a7 7 0 0 1-12 5"/><path d="M27 27a7 7 0 0 1 14 0"/><path d="M12 18c-2 4-3 8-3 12M52 18c2 4 3 8 3 12" opacity=".5"/></svg>';
+const ICON_MIC = '<svg viewBox="0 0 64 64" fill="none" stroke="#c62828" stroke-width="3.5" stroke-linecap="round"><rect x="24" y="8" width="16" height="30" rx="8"/><path d="M16 30a16 16 0 0 0 32 0M32 46v10M24 56h16"/></svg>';
+
+/* =====================================================================
+   SCREENS
+   ===================================================================== */
+function signIn() {
+  return new Promise(res => {
+    where('');
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('toefl_resume') || 'null'); } catch (e) {}
+    const groups = (CONFIG.groups || []).map(g => '<option>' + esc(g) + '</option>').join('');
+    const grades = ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map(g => '<option value="' + g + '">Grade ' + g + '</option>').join('');
+    render(
+      '<div class="card"><span class="pill">' + esc(CONFIG.modeLabel) + ' test · Form ' + esc(BANK.form) + '</span>' +
+      '<h1 style="margin-top:10px">' + esc(CONFIG.title) + '</h1>' +
+      '<p class="muted">This test has four parts: Reading, Listening, Writing, and Speaking. It takes about 90 minutes. ' +
+      'Some questions get harder or easier depending on your answers, so just do your best.</p>' +
+      '<div class="field"><label for="nm">Your name (in English)</label><input id="nm" autocomplete="off" placeholder="e.g. Minjun Kim"></div>' +
+      '<div class="field"><label for="no">Student number <span class="muted small">(if you have one)</span></label><input id="no" autocomplete="off"></div>' +
+      '<div class="field"><label for="gr">Grade</label><select id="gr"><option value="">Choose…</option>' + grades + '</select></div>' +
+      '<div class="field"><label for="gp">Class time</label><select id="gp"><option value="">Choose…</option>' + groups + '<option>Other</option></select></div>' +
+      '<div class="errbox hide" id="err"></div>' +
+      '<p style="margin-top:22px"><button class="btn big" id="go">Next</button></p>' +
+      '<div class="resume"><h3>Continue a saved test</h3>' +
+      (saved ? '<p><button class="btn ghost" id="mine">Continue ' + esc(saved.name || 'my') + '\'s test (code ' + esc(saved.code) + ')</button></p><p class="small muted">Not you? Type your own code below.</p>' : '') +
+      '<div class="row"><input id="rc" maxlength="8" autocomplete="off" placeholder="CODE" aria-label="Saved test code" style="width:170px;padding:10px 12px;border:1px solid #b9c0ca;border-radius:8px">' +
+      '<button class="btn ghost" id="rgo">Continue</button></div><div class="errbox hide" id="rerr"></div></div></div>'
+    );
+    const tryResume = async code => {
+      code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const e = $('#rerr');
+      if (code.length < 4) { e.textContent = 'Please type the code from your last test.'; e.classList.remove('hide'); return; }
+      e.classList.add('hide'); $('#rgo').disabled = true; $('#rgo').textContent = 'Checking…';
+      try {
+        const r = await callRetry('resumeSession', { code: code }, 2);
+        S.sessionId = r.sessionId; S.started = r.started; S.done = r.done || []; S.resumed = true;
+        S.student = { name: r.student, no: r.studentNo, grade: String(r.grade), group: r.group };
+        S.modeKey = r.modeKey || S.modeKey; S.recFolder = r.recFolder || '';
+        if (r.reading) S.reading = r.reading;
+        if (r.listening) S.listening = r.listening;
+        setCode(r.code);
+        res();
+      } catch (err) {
+        e.textContent = String(err && err.message || err).replace(/^Error:\s*/, ''); e.classList.remove('hide');
+        $('#rgo').disabled = false; $('#rgo').textContent = 'Continue';
+      }
+    };
+    $('#rgo').onclick = () => tryResume($('#rc').value);
+    $('#rc').addEventListener('keydown', ev => { if (ev.key === 'Enter') tryResume($('#rc').value); });
+    if ($('#mine')) $('#mine').onclick = () => { $('#rc').value = saved.code; tryResume(saved.code); };
+    $('#go').onclick = () => {
+      const name = $('#nm').value.replace(/\s+/g, ' ').trim().toLowerCase().replace(/(^|[\s'-])\S/g, c => c.toUpperCase());
+      const grade = $('#gr').value, group = $('#gp').value;
+      const miss = [];
+      if (name.length < 2) miss.push('your name');
+      if (!grade) miss.push('your grade');
+      if (!group) miss.push('your class time');
+      if (miss.length) { const e = $('#err'); e.textContent = 'Please enter ' + miss.join(', ') + '.'; e.classList.remove('hide'); return; }
+      S.student = { name: name, no: $('#no').value.trim(), grade: grade, group: group };
+      res();
+    };
+  });
+}
+
+function deviceCheck() {
+  return new Promise(res => {
+    where('Sound and microphone check');
+    render(
+      '<div class="card"><h2>Check your headphones and microphone</h2>' +
+      '<p class="muted">Put on your headphones. Raise your hand if something does not work.</p>' +
+      '<h3 style="margin-top:22px">1. Sound</h3>' +
+      '<div class="row"><button class="btn ghost" id="snd">▶ Play test sound</button>' +
+      '<label class="row hide" id="sndLbl" style="gap:8px"><input type="checkbox" id="sndOk"> I can hear it clearly</label></div>' +
+      '<div class="errbox hide" id="sndErr">Sound is not working in this browser. Please tell your teacher. (Google Chrome works best.)</div>' +
+      '<h3 style="margin-top:26px">2. Microphone</h3>' +
+      '<p class="small muted" style="margin-top:-4px">Press the button and say: "My name is ___ and I am in grade ___." It will play back to you.</p>' +
+      '<div class="row"><button class="btn ghost" id="mic">● Record 4 seconds</button><div class="meter"><div id="lvl"></div></div><span id="micMsg" class="small"></span></div>' +
+      '<div class="row hide" id="micAsk" style="margin-top:10px"><span>Did you hear your voice?</span>' +
+      '<button class="btn ghost" id="micYes">Yes</button><button class="btn ghost" id="micNo">No</button></div>' +
+      '<div class="warnbox hide" id="micWarn">Your microphone is not working. Tell your teacher now. You can still do Reading, Listening, and Writing.</div>' +
+      '<p style="margin-top:26px"><button class="btn big" id="go" disabled>Start the test</button></p></div>'
+    );
+    let micDecided = false;
+    const update = () => { $('#go').disabled = !(S.soundOk && micDecided); };
+    $('#snd').onclick = async () => {
+      $('#snd').disabled = true;
+      const checkLines = [{ s: 'F', t: 'Hello! If you can hear this, your sound is working.' }, { s: 'M', t: 'And this is the second voice you will hear in the test.' }];
+      await AUDIO.preload(checkLines);
+      const ok = checkLines.every(l => AUDIO.url(l)) || await TTS.init();
+      if (!ok) { $('#sndErr').classList.remove('hide'); S.soundOk = true; update(); return; }
+      await TTS.lines([{ s: 'F', t: 'Hello! If you can hear this, your sound is working.' }, { s: 'M', t: 'And this is the second voice you will hear in the test.' }], 0.95);
+      $('#snd').disabled = false; $('#snd').textContent = '▶ Play again';
+      $('#sndLbl').classList.remove('hide');
+    };
+    $('#sndOk').onchange = e => { S.soundOk = e.target.checked; update(); };
+    $('#mic').onclick = async () => {
+      $('#mic').disabled = true; $('#micMsg').textContent = '';
+      try {
+        await getMic();
+        const stopMeter = meter(MIC, $('#lvl'));
+        const r = startRecording();
+        $('#micMsg').innerHTML = '<span class="recdot pulse"></span>Recording…';
+        await sleep(4000);
+        r.stop();
+        const blob = await r.done;
+        stopMeter(); $('#lvl').style.width = '0';
+        $('#micMsg').textContent = 'Playing back…';
+        const a = new Audio(URL.createObjectURL(blob));
+        const clear = () => { const mm = $('#micMsg'); if (mm) mm.textContent = ''; };
+        a.onended = clear;
+        try { await a.play(); } catch (e) { clear(); }
+        $('#micAsk').classList.remove('hide');
+      } catch (e) {
+        const blocked = e && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+        const none = e && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError');
+        $('#micMsg').innerHTML = '<span class="status-bad">' + (blocked
+          ? 'The microphone is blocked. Click the icon to the left of the web address, set Microphone to Allow, then press Try again.'
+          : none ? 'No microphone was found. Check that the headset is plugged in, then press Try again.'
+          : 'The microphone could not start.') + '</span>';
+        S.micOk = false; micDecided = true; $('#micWarn').classList.remove('hide'); update();
+      }
+      $('#mic').disabled = false; $('#mic').textContent = '● Try again';
+    };
+    $('#micYes').onclick = () => { S.micOk = true; micDecided = true; $('#micWarn').classList.add('hide'); $('#micMsg').innerHTML = '<span class="status-ok">Microphone OK</span>'; update(); };
+    $('#micNo').onclick = () => { S.micOk = false; micDecided = true; $('#micWarn').classList.remove('hide'); update(); };
+    $('#go').onclick = () => res();
+  });
+}
+
+function intro(title, tasks, note) {
+  return new Promise(res => {
+    stopTimer(); nav('');
+    S.current = Object.keys(PART_NAMES).find(k => PART_NAMES[k] === title) || '';
+    where(title);
+    const rows = tasks.map(t => '<tr><td><b>' + esc(t[0]) + '</b><br><span class="muted small">' + esc(t[1]) + '</span></td><td>' + esc(t[2]) + '</td></tr>').join('');
+    render('<div class="card"><h1>' + esc(title) + '</h1>' + (note ? '<p class="muted">' + note + '</p>' : '') +
+      '<table class="tasklist">' + rows + '</table>' +
+      '<div class="row" style="margin-top:24px"><button class="btn big" id="go">Begin</button>' +
+      '<button class="btn ghost" id="later">Save and finish later</button></div></div>');
+    showStop(false);
+    $('#go').onclick = () => { showStop(S.current !== 'speaking'); res(); };
+    $('#later').onclick = () => stopAndSave(false);
+  });
+}
+
+function message(title, html, btn) {
+  return new Promise(res => {
+    stopTimer(); nav('');
+    render('<div class="card"><h2>' + esc(title) + '</h2>' + html + (btn ? '<p style="margin-top:22px"><button class="btn big" id="go">' + esc(btn) + '</button></p>' : '') + '</div>');
+    if (btn) $('#go').onclick = () => res(); else res();
+  });
+}
+
+/* =====================================================================
+   READING
+   ===================================================================== */
+/* Complete the Words, TOEFL rule: the first sentence stays whole; from the second
+   sentence on, every second word loses its second half, 10 words in all.
+   One-letter words and words with apostrophes or hyphens are not counted.
+   A paragraph that already marks words with {braces} is used as written. */
+function cTest(text, count) {
+  if (text.indexOf('{') >= 0) return text;
+  const m = text.match(/^[\s\S]*?[.!?]["')]?\s+/);
+  if (!m) return text;
+  const head = m[0], rest = text.slice(head.length);
+  let n = 0, made = 0;
+  const out = rest.split(/(\s+)/).map(tok => {
+    if (made >= (count || 10) || /^\s*$/.test(tok)) return tok;
+    const w = tok.match(/^([^A-Za-z]*)([A-Za-z]+)([^A-Za-z]*)$/);
+    if (!w || w[2].length < 2) return tok;
+    n++;
+    if (n % 2 === 0) { made++; return w[1] + '{' + w[2] + '}' + w[3]; }
+    return tok;
+  });
+  return head + out.join('');
+}
+
+function prepReading(sets) {
+  return sets.map(set => {
+    const s = { set: set, answers: [] };
+    if (set.type === 'ctw') {
+      s.blanks = [];
+      s.parts = cTest(set.text).split(/(\{[^}]+\})/).map(p => {
+        const m = p.match(/^\{([^}]+)\}$/);
+        if (!m) return { text: p };
+        const w = m[1], show = Math.max(1, Math.floor(w.length / 2));
+        const b = { shown: w.slice(0, show), missing: w.slice(show), i: s.blanks.length };
+        s.blanks.push(b);
+        return { blank: b };
+      });
+      s.answers = s.blanks.map(() => '');
+    } else {
+      s.orders = set.qs.map(q => shuffle(q.opts.map((_, i) => i)));
+      s.answers = set.qs.map(() => null);
+    }
+    return s;
+  });
+}
+
+function mcHtml(prefix, q, order, chosen, qi, num) {
+  return '<div class="q"><div class="stem">' + (num ? num + '. ' : '') + esc(q.q || '') + '</div>' +
+    order.map(oi => '<label class="opt' + (chosen === oi ? ' sel' : '') + '"><input type="radio" name="' + prefix + qi + '" value="' + oi + '"' +
+      (chosen === oi ? ' checked' : '') + '><span>' + esc(q.opts[oi]) + '</span></label>').join('') + '</div>';
+}
+
+function runReadingModule(sets, label, minutes) {
+  return new Promise(resolve => {
+    const pages = prepReading(sets);
+    let idx = 0, finished = false;
+    const unanswered = () => pages.reduce((n, p) => n + p.answers.filter(a => a === null || a === '').length, 0);
+
+    const finish = () => {
+      if (finished) return; finished = true; stopTimer(); nav('');
+      const items = [];
+      pages.forEach(p => {
+        if (p.set.type === 'ctw') p.blanks.forEach((b, i) => items.push({ cat: 'ctw', ok: String(p.answers[i] || '').trim().toLowerCase() === b.missing.toLowerCase() }));
+        else p.set.qs.forEach((q, i) => items.push({ cat: p.set.type, ok: p.answers[i] === q.a }));
+      });
+      resolve(items);
+    };
+
+    const show = () => {
+      const p = pages[idx], set = p.set;
+      where('Reading · ' + label + ' · Page ' + (idx + 1) + ' of ' + pages.length);
+      let html;
+      if (set.type === 'ctw') {
+        const body = p.parts.map(part => part.blank
+          ? '<span class="w"><span class="shown">' + esc(part.blank.shown) + '</span><input data-b="' + part.blank.i + '" maxlength="' + part.blank.missing.length +
+            '" placeholder="' + '_'.repeat(part.blank.missing.length) + '" style="width:calc(' + part.blank.missing.length + ' * (1ch + .32em) + .3em)" value="' + esc(p.answers[part.blank.i]) +
+            '" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="' + part.blank.missing.length + ' missing letters"></span>'
+          : esc(part.text)).join('');
+        html = '<div class="card"><h2>' + esc(set.title) + '</h2><p class="muted">Type the missing letters to complete the words in the paragraph.</p>' +
+          '<div class="ctw">' + body + '</div></div>';
+      } else {
+        const textHtml = set.type === 'daily'
+          ? '<span class="pill">' + esc(set.genre) + '</span><div class="notice" style="margin-top:10px">' + esc(set.text) + '</div>'
+          : '<h3>' + esc(set.heading) + '</h3><div class="passage">' + paras(set.text) + '</div>';
+        const qs = set.qs.map((q, qi) => mcHtml('r' + idx + '_', q, p.orders[qi], p.answers[qi], qi, qi + 1)).join('');
+        html = '<div class="card"><h2>' + esc(set.title) + '</h2><div class="grid2"><div>' + textHtml + '</div><div>' + qs + '</div></div></div>';
+      }
+      render(html);
+      nav('<button class="btn ghost" id="back"' + (idx === 0 ? ' disabled' : '') + '>Back</button><span class="spacer"></span>' +
+        (idx < pages.length - 1 ? '<button class="btn" id="next">Next</button>' : '<button class="btn" id="done">Finish this part</button>'));
+      if (set.type === 'ctw') {
+        $$('.ctw input').forEach(inp => {
+          inp.addEventListener('input', () => { p.answers[+inp.dataset.b] = inp.value; });
+          inp.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); const n = $('.ctw input[data-b="' + (+inp.dataset.b + 1) + '"]'); if (n) n.focus(); }
+          });
+          inp.addEventListener('keyup', e => {
+            if (inp.value.length >= inp.maxLength && /^[a-z]$/i.test(e.key)) { const n = $('.ctw input[data-b="' + (+inp.dataset.b + 1) + '"]'); if (n) n.focus(); }
+          });
+        });
+        const first = $('.ctw input'); if (first) first.focus();
+      } else {
+        $$('#app input[type=radio]').forEach(r => r.addEventListener('change', () => {
+          const qi = +r.name.split('_')[1]; p.answers[qi] = +r.value;
+          $$('input[name="' + r.name + '"]').forEach(x => x.closest('.opt').classList.toggle('sel', x.checked));
+        }));
+      }
+      $('#back').onclick = () => { if (idx > 0) { idx--; show(); } };
+      if ($('#next')) $('#next').onclick = () => { idx++; show(); };
+      if ($('#done')) $('#done').onclick = async () => {
+        const u = unanswered();
+        if (u && !(await modal('You have <b>' + u + '</b> unanswered question' + (u > 1 ? 's' : '') + '. Use <b>Back</b> to check them, or finish now.', 'Finish now', 'Go back'))) return;
+        finish();
+      };
+    };
+    startTimer(minutes, finish);
+    show();
+  });
+}
+
+/* =====================================================================
+   LISTENING
+   ===================================================================== */
+function directionsScreen(type) {
+  return new Promise(async res => {
+    const paused = pauseTimer();
+    $('#timer').classList.add('hide');
+    render('<div class="card"><span class="pill">Directions</span><h2 style="margin-top:10px">' + esc(L_TITLES[type]) + '</h2>' +
+      '<p style="font-size:18px">' + esc(dirOf(type)) + '</p>' +
+      '<div class="listen" id="dz" style="padding:14px">' + ICON_EAR.replace('<svg', '<svg class="pulse"') + '</div></div>');
+    nav('<span class="spacer"></span><button class="btn" id="cont" disabled>Continue</button>');
+    await TTS.lines([{ s: 'N', t: dirOf(type) }], 0.95);
+    if (S.stopped) return;
+    const dz = $('#dz'); if (dz) dz.classList.add('hide');
+    const c = $('#cont'); if (!c) return;
+    c.disabled = false;
+    c.onclick = () => { nav(''); resumeTimer(paused); res(); };
+  });
+}
+
+function runListeningModule(sets, label, minutes, rate) {
+  return new Promise(resolve => {
+    const items = [];
+    let idx = 0, finished = false, lastType = '';
+    const finish = () => {
+      if (finished) return; finished = true; stopTimer(); nav('');
+      try { speechSynthesis.cancel(); } catch (e) {}
+      AUDIO.stop();
+      // anything not reached counts as wrong
+      for (let i = idx; i < sets.length; i++) {
+        const st = sets[i];
+        if (st._scored) continue;
+        if (st.type === 'response') items.push({ cat: 'response', ok: false });
+        else st.qs.forEach(() => items.push({ cat: st.type, ok: false }));
+      }
+      resolve(items);
+    };
+    const show = async () => {
+      if (finished || S.stopped) return;
+      if (idx >= sets.length) { finish(); return; }
+      const set = sets[idx];
+      if (set.type !== lastType && dirOf(set.type)) {
+        lastType = set.type;
+        where('Listening · ' + label + ' · Directions');
+        await directionsScreen(set.type);
+        if (finished || S.stopped) return;
+      }
+      lastType = set.type;
+      where('Listening · ' + label + ' · ' + (idx + 1) + ' of ' + sets.length);
+      const isResp = set.type === 'response';
+      const nQ = isResp ? 1 : set.qs.length;
+      const long = set.type === 'conversation' || set.type === 'announcement' || set.type === 'talk';
+      const secs = AUDIO.seconds(set.lines);
+      const context = isResp ? 'You will hear a person speak. Choose the best response.' : set.intro;
+      render('<div class="card"><h2>' + esc(L_TITLES[set.type]) + '</h2><p>' + esc(context) + '</p>' +
+        '<p class="muted small">Length: ' + lengthLabel(secs) + ' · ' + nQ + ' question' + (nQ > 1 ? 's' : '') + ' · Plays one time' +
+        (long ? ' · You may take notes' : '') + '</p>' +
+        '<div class="listen" id="lz">' + ICON_EAR + '<p><button class="btn big" id="play">▶ Play</button></p><p class="muted small" id="ls"></p></div>' +
+        '<div id="qz"></div></div>');
+      nav('<span class="spacer"></span><button class="btn" id="next" disabled>Next</button>');
+      const chosen = isResp ? [null] : set.qs.map(() => null);
+      const orders = isResp ? [shuffle(set.opts.map((_, i) => i))] : set.qs.map(q => shuffle(q.opts.map((_, i) => i)));
+      const gone = () => finished || S.stopped || !$('#lz');
+      $('#play').onclick = async () => {
+        $('#play').classList.add('hide');
+        $('#lz svg').classList.add('pulse');
+        $('#ls').textContent = 'Get ready…';
+        await chime(true);
+        if (gone()) return;
+        if (set.intro) { await TTS.lines([{ s: 'N', t: set.intro }], 0.95); if (gone()) return; }
+        await sleep(long ? 2000 : 1000);
+        if (gone()) return;
+        $('#ls').textContent = 'Listening…';
+        await TTS.lines(set.lines, rate);
+        if (gone()) return;
+        await chime(false);
+        if (gone()) return;
+        $('#lz svg').classList.remove('pulse');
+        $('#lz').classList.add('hide');
+        const qs = isResp ? [{ q: 'Choose the best response.', opts: set.opts }] : set.qs;
+        $('#qz').innerHTML = '<p class="pill" style="margin-bottom:14px">' + (nQ > 1 ? ANSWER_MANY : ANSWER_ONE) + '</p>' +
+          qs.map((q, qi) => mcHtml('l' + idx + '_', q, orders[qi], null, qi, isResp ? 0 : qi + 1)).join('');
+        $$('#qz input[type=radio]').forEach(r => r.addEventListener('change', () => {
+          const qi = +r.name.split('_')[1]; chosen[qi] = +r.value;
+          $$('input[name="' + r.name + '"]').forEach(x => x.closest('.opt').classList.toggle('sel', x.checked));
+          $('#next').disabled = chosen.some(c => c === null);
+        }));
+        TTS.lines([{ s: 'N', t: nQ > 1 ? ANSWER_MANY : ANSWER_ONE }], 0.95);
+      };
+      $('#next').onclick = () => {
+        AUDIO.stop();
+        if (isResp) items.push({ cat: 'response', ok: chosen[0] === set.a });
+        else set.qs.forEach((q, i) => items.push({ cat: set.type, ok: chosen[i] === q.a }));
+        set._scored = true;
+        idx++; show();
+      };
+    };
+    sets.forEach(s => { delete s._scored; });
+    startTimer(minutes, finish);
+    show();
+  });
+}
+
+/* =====================================================================
+   SCORING
+   ===================================================================== */
+function tally(items) { return { c: items.filter(i => i.ok).length, n: items.length }; }
+function catPct(items, cat) { const f = items.filter(i => i.cat === cat); return pct(f.filter(i => i.ok).length, f.length); }
+function band(route, a, b) {
+  const p = (a.c + b.c) / Math.max(1, a.n + b.n);
+  let x = route === 'Harder' ? 2.5 + 3.5 * p : 1 + 3 * p;
+  x = Math.round(x * 2) / 2;
+  return Math.min(6, Math.max(1, x));
+}
+
+async function readingSection() {
+  await intro('Reading', [
+    ['Part 1', 'Complete the Words, Read in Daily Life, Read an Academic Passage', TIMES.readingM1 + ' min'],
+    ['Part 2', 'The same three tasks. The level depends on your Part 1 answers.', TIMES.readingM2 + ' min']
+  ], 'You can move back and forth between pages inside each part.');
+  const m1 = await runReadingModule(BANK.reading.m1, 'Part 1', TIMES.readingM1);
+  const t1 = tally(m1);
+  const route = t1.c / t1.n >= ROUTE_AT ? 'Harder' : 'Easier';
+  await message('Reading Part 1 is finished', '<p>Take a breath. Part 2 starts when you press the button.</p>', 'Start Part 2');
+  const m2 = await runReadingModule(route === 'Harder' ? BANK.reading.hard : BANK.reading.easy, 'Part 2', TIMES.readingM2);
+  const t2 = tally(m2), all = m1.concat(m2);
+  const data = { route: route, m1: t1.c + '/' + t1.n, m2: t2.c + '/' + t2.n,
+    cats: { ctw: catPct(all, 'ctw'), daily: catPct(all, 'daily'), academic: catPct(all, 'academic') },
+    band: band(route, t1, t2) };
+  S.reading = data;
+  await saveSection('reading', data);
+}
+
+async function listeningSection() {
+  await intro('Listening', [
+    ['Part 1', 'Choose a Response, Conversation, Announcement, Academic Talk', TIMES.listeningM1 + ' min'],
+    ['Part 2', 'The same four tasks. The level depends on your Part 1 answers.', TIMES.listeningM2 + ' min']
+  ], 'Each recording plays <b>one time only</b>. You cannot go back to earlier questions.');
+  await loadingAudio(linesOf(BANK.listening.m1));
+  const m1 = await runListeningModule(BANK.listening.m1, 'Part 1', TIMES.listeningM1, 0.95);
+  const t1 = tally(m1);
+  const route = t1.c / t1.n >= ROUTE_AT ? 'Harder' : 'Easier';
+  await message('Listening Part 1 is finished', '<p>Part 2 starts when you press the button.</p>', 'Start Part 2');
+  await loadingAudio(linesOf(route === 'Harder' ? BANK.listening.hard : BANK.listening.easy));
+  const m2 = await runListeningModule(route === 'Harder' ? BANK.listening.hard : BANK.listening.easy, 'Part 2', TIMES.listeningM2, route === 'Harder' ? 1 : 0.95);
+  const t2 = tally(m2), all = m1.concat(m2);
+  const data = { route: route, m1: t1.c + '/' + t1.n, m2: t2.c + '/' + t2.n,
+    cats: { response: catPct(all, 'response'), conversation: catPct(all, 'conversation'), announcement: catPct(all, 'announcement'), talk: catPct(all, 'talk') },
+    band: band(route, t1, t2), audioProblems: TTS.problems };
+  S.listening = data;
+  await saveSection('listening', data);
+}
+
+/* =====================================================================
+   WRITING
+   ===================================================================== */
+function runBuildSentence(items, minutes) {
+  return new Promise(resolve => {
+    const st = items.map(it => {
+      const all = it.chunks.concat(it.extra || []);
+      return { it: it, pool: shuffle(all.map((t, i) => ({ id: i, t: t }))), placed: it.chunks.map(() => null) };
+    });
+    let idx = 0, finished = false;
+    const finish = () => {
+      if (finished) return; finished = true; stopTimer(); nav('');
+      let c = 0;
+      st.forEach(s => {
+        const txt = s.placed.map(id => id === null ? null : s.pool.find(p => p.id === id).t);
+        if (txt.every((t, i) => t === s.it.chunks[i])) c++;
+      });
+      resolve(c);
+    };
+    const show = () => {
+      const s = st[idx];
+      where('Writing · Build a Sentence · ' + (idx + 1) + ' of ' + st.length);
+      const slots = s.placed.map((id, i) => id === null ? '<span class="slot"></span>'
+        : '<button class="chip placed" data-slot="' + i + '">' + esc(s.pool.find(p => p.id === id).t) + '</button>').join('');
+      const used = new Set(s.placed.filter(x => x !== null));
+      const pool = s.pool.filter(p => !used.has(p.id)).map(p => '<button class="chip" data-id="' + p.id + '">' + esc(p.t) + '</button>').join('');
+      render('<div class="card"><h2>Build a Sentence</h2><p class="muted">Put the words in the correct order to answer. Click a word to add it. Click it again to take it out.' +
+        ((s.it.extra || []).length ? ' <b>One word will not be used.</b>' : '') + '</p>' +
+        '<div style="margin:18px 0"><div class="who">Friend</div><div class="bubble">' + esc(s.it.prompt) + '</div></div>' +
+        '<div><div class="who">You</div><div class="bubble you" style="display:block"><div class="slots">' + slots + '<span class="punct">' + esc(s.it.end) + '</span></div></div></div>' +
+        '<div class="pool">' + (pool || '<span class="muted small">All words used. Click a word above to take it out.</span>') + '</div></div>');
+      nav('<button class="btn ghost" id="back"' + (idx === 0 ? ' disabled' : '') + '>Back</button><span class="spacer"></span>' +
+        (idx < st.length - 1 ? '<button class="btn" id="next">Next</button>' : '<button class="btn" id="done">Finish this part</button>'));
+      $$('.pool .chip').forEach(b => b.onclick = () => { const e = s.placed.indexOf(null); if (e >= 0) { s.placed[e] = +b.dataset.id; show(); } });
+      $$('.slots .chip').forEach(b => b.onclick = () => { s.placed[+b.dataset.slot] = null; show(); });
+      $('#back').onclick = () => { if (idx > 0) { idx--; show(); } };
+      if ($('#next')) $('#next').onclick = () => { idx++; show(); };
+      if ($('#done')) $('#done').onclick = async () => {
+        const u = st.filter(x => x.placed.some(p => p === null)).length;
+        if (u && !(await modal('<b>' + u + '</b> sentence' + (u > 1 ? 's are' : ' is') + ' not finished. Finish anyway?', 'Finish now', 'Go back'))) return;
+        finish();
+      };
+    };
+    startTimer(minutes, finish);
+    show();
+  });
+}
+
+function noPaste(ta) { ['paste', 'drop'].forEach(ev => ta.addEventListener(ev, e => e.preventDefault())); }
+
+function runEmail(task, minutes) {
+  return new Promise(resolve => {
+    let finished = false;
+    where('Writing · Write an Email');
+    render('<div class="card"><h2>Write an Email</h2><div class="grid2"><div>' +
+      '<p>' + esc(task.scenario) + '</p><p><b>Write an email to ' + esc(task.to) + '. In your email:</b></p><ul>' +
+      task.bullets.map(b => '<li>' + esc(b) + '</li>').join('') + '</ul>' +
+      '<p class="muted small">Write at least ' + task.minWords + ' words. Use complete sentences.</p></div><div>' +
+      '<div class="small muted">To: ' + esc(task.to) + '<br>Subject: ' + esc(task.subject) + '</div>' +
+      '<textarea class="resp" id="ta" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="sentences" placeholder="Dear ' + esc(task.to) + ',"></textarea>' +
+      '<div class="wc" id="wc">0 words</div></div></div></div>');
+    nav('<span class="spacer"></span><button class="btn" id="done">Finish this part</button>');
+    const ta = $('#ta'); noPaste(ta); ta.focus();
+    ta.addEventListener('input', () => { const n = words(ta.value); $('#wc').textContent = n + ' word' + (n === 1 ? '' : 's'); $('#wc').classList.toggle('ok', n >= task.minWords); });
+    const finish = () => { if (finished) return; finished = true; stopTimer(); nav(''); resolve(ta.value.trim()); };
+    $('#done').onclick = async () => {
+      if (words(ta.value) < task.minWords && !(await modal('Your email has fewer than ' + task.minWords + ' words. Finish anyway?', 'Finish now', 'Keep writing'))) return;
+      finish();
+    };
+    startTimer(minutes, finish);
+  });
+}
+
+function runDiscussion(task, minutes) {
+  return new Promise(resolve => {
+    let finished = false;
+    where('Writing · Academic Discussion');
+    render('<div class="card"><h2>Write for an Academic Discussion</h2><div class="grid2"><div>' +
+      '<p class="muted small">Your teacher has posted a question on the class discussion board. Write a response that adds your own opinion and reasons.</p>' +
+      '<div class="post prof"><div class="who">' + esc(task.professor) + '</div>' + esc(task.prompt) + '</div>' +
+      task.posts.map(p => '<div class="post"><div class="who">' + esc(p.name) + '</div>' + esc(p.text) + '</div>').join('') +
+      '<p class="muted small">Write at least ' + task.minWords + ' words.</p></div><div>' +
+      '<textarea class="resp" id="ta" spellcheck="false" autocomplete="off" autocorrect="off" style="min-height:340px"></textarea>' +
+      '<div class="wc" id="wc">0 words</div></div></div></div>');
+    nav('<span class="spacer"></span><button class="btn" id="done">Finish this part</button>');
+    const ta = $('#ta'); noPaste(ta); ta.focus();
+    ta.addEventListener('input', () => { const n = words(ta.value); $('#wc').textContent = n + ' word' + (n === 1 ? '' : 's'); $('#wc').classList.toggle('ok', n >= task.minWords); });
+    const finish = () => { if (finished) return; finished = true; stopTimer(); nav(''); resolve(ta.value.trim()); };
+    $('#done').onclick = async () => {
+      if (words(ta.value) < task.minWords && !(await modal('Your response has fewer than ' + task.minWords + ' words. Finish anyway?', 'Finish now', 'Keep writing'))) return;
+      finish();
+    };
+    startTimer(minutes, finish);
+  });
+}
+
+async function writingSection() {
+  await intro('Writing', [
+    ['Build a Sentence', 'Put words in the right order (10 sentences)', TIMES.bas + ' min'],
+    ['Write an Email', 'Write a short email to a friend', TIMES.email + ' min'],
+    ['Academic Discussion', 'Give your opinion on a class discussion board', TIMES.discussion + ' min']
+  ], 'Spell check is turned off, just like the real test.');
+  const bas = await runBuildSentence(BANK.writing.bas, TIMES.bas);
+  await message('Next: Write an Email', '<p>You will have ' + TIMES.email + ' minutes.</p>', 'Start');
+  const email = await runEmail(BANK.writing.email, TIMES.email);
+  await message('Next: Academic Discussion', '<p>You will have ' + TIMES.discussion + ' minutes.</p>', 'Start');
+  const disc = await runDiscussion(BANK.writing.discussion, TIMES.discussion);
+  const data = { bas: bas, basTotal: BANK.writing.bas.length, email: email, emailWords: words(email), disc: disc, discWords: words(disc) };
+  S.writing = data;
+  await saveSection('writing', data);
+}
+
+/* =====================================================================
+   SPEAKING
+   ===================================================================== */
+function recordScreen(title, sub, secs, label, earlyAfter) {
+  return new Promise(async resolve => {
+    $('#sz').innerHTML = '<div class="recbox">' + ICON_MIC + '<h3 style="margin-top:8px"><span class="recdot pulse"></span>Recording</h3>' +
+      '<div class="muted" id="left">' + secs + ' seconds</div><div class="progress"><div id="pb"></div></div>' +
+      (earlyAfter ? '<p style="margin-top:18px"><button class="btn ghost" id="early" disabled>I\'m finished</button></p>' : '') + '</div>';
+    const r = startRecording();
+    const ms = secs * 1000 * SCALE, t0 = Date.now();
+    let stopped = false;
+    const stop = () => { if (stopped) return; stopped = true; clearInterval(iv); r.stop(); };
+    const iv = setInterval(() => {
+      const el = Date.now() - t0, left = Math.max(0, Math.ceil((ms - el) / 1000 / SCALE));
+      const pb = $('#pb'); if (pb) pb.style.width = Math.min(100, el / ms * 100) + '%';
+      const lf = $('#left'); if (lf) lf.textContent = left + ' second' + (left === 1 ? '' : 's');
+      const eb = $('#early'); if (eb && el >= earlyAfter * 1000 * SCALE) eb.disabled = false;
+      if (el >= ms) stop();
+    }, 100);
+    if (earlyAfter) $('#early').onclick = stop;
+    try {
+      const blob = await r.done;
+      uploadRecording(label, blob).catch(() => {});
+    } catch (e) { S.recFails++; }
+    resolve();
+  });
+}
+
+async function speakingSection() {
+  await intro('Speaking', [
+    ['Listen and Repeat', 'Listen to 7 sentences and repeat each one', 'about 3 min'],
+    ['Take an Interview', 'Answer 4 interview questions', 'about 4 min']
+  ], 'Your answers are recorded. When you hear the <b>beep</b>, start speaking.');
+  let micNote = 'OK';
+  try { await getMic(); }
+  catch (e) {
+    micNote = 'Not available';
+    await message('Microphone not working', '<p>Your microphone could not start, so you will skip the recorded Speaking part.</p><p><b>Please tell your teacher.</b> Your teacher will do the speaking questions with you.</p>', 'Continue');
+    S.speaking = { mic: micNote };
+    await saveSection('speaking', { mic: micNote, folderUrl: '' });
+    return;
+  }
+  const rp = BANK.speaking.repeat, iv = BANK.speaking.interview;
+  await loadingAudio(rp.items.map(it => ({ s: 'F', t: it.t })).concat([{ s: 'M', t: iv.intro }], iv.items.map(it => ({ s: 'M', t: it.t }))));
+
+  // Listen and Repeat
+  await new Promise(res => {
+    where('Speaking · Listen and Repeat');
+    render('<div class="card"><h2>Listen and Repeat</h2><p>' + esc(rp.intro) + '</p><p class="muted small">Each sentence plays once. After the beep, repeat it exactly.</p>' +
+      '<p><button class="btn big" id="go">Start</button></p><div id="sz"></div></div>');
+    $('#go').onclick = () => { $('#go').classList.add('hide'); res(); };
+  });
+  for (let i = 0; i < rp.items.length; i++) {
+    const it = rp.items[i];
+    where('Speaking · Listen and Repeat · ' + (i + 1) + ' of ' + rp.items.length);
+    $('#sz').innerHTML = '<div class="listen">' + ICON_EAR.replace('<svg', '<svg class="pulse"') + '<p class="muted">Listen…</p></div>';
+    await sleep(600);
+    await TTS.lines([{ s: 'F', t: it.t }], 0.95);
+    await beep();
+    await recordScreen('Repeat', '', it.secs, 'Repeat ' + (i + 1));
+  }
+
+  // Interview
+  await new Promise(res => {
+    where('Speaking · Take an Interview');
+    render('<div class="card"><h2>Take an Interview</h2><p>An interviewer will ask you four questions. After each beep, answer the question. You have 45 seconds for each answer.</p>' +
+      '<p class="muted small">Try to speak for the whole time. Give reasons and examples.</p>' +
+      '<p><button class="btn big" id="go">Start</button></p><div id="sz"></div></div>');
+    $('#go').onclick = () => { $('#go').classList.add('hide'); res(); };
+  });
+  $('#sz').innerHTML = '<div class="listen">' + ICON_EAR.replace('<svg', '<svg class="pulse"') + '<p class="muted">Listen…</p></div>';
+  await TTS.lines([{ s: 'M', t: iv.intro }], 0.95);
+  for (let i = 0; i < iv.items.length; i++) {
+    const it = iv.items[i];
+    where('Speaking · Take an Interview · Question ' + (i + 1) + ' of ' + iv.items.length);
+    $('#sz').innerHTML = '<div class="listen">' + ICON_EAR.replace('<svg', '<svg class="pulse"') + '<p class="muted">Question ' + (i + 1) + '</p></div>';
+    await sleep(500);
+    await TTS.lines([{ s: 'M', t: it.t }], 0.95);
+    await beep();
+    await recordScreen('Interview', '', it.secs, 'Interview ' + (i + 1), 20);
+  }
+
+  where('Saving');
+  render('<div class="card"><h2>Saving your recordings…</h2><p class="muted">Please wait. Do not close this page.</p></div>');
+  await Promise.allSettled(S.uploads);
+  if (S.recFails) micNote = 'Upload problems (' + S.recFails + ')';
+  S.speaking = { mic: micNote };
+  await saveSection('speaking', { mic: micNote, folderUrl: S.recFolder });
+}
+
+/* =====================================================================
+   FINISH
+   ===================================================================== */
+async function finishScreen() {
+  S.inTest = false;
+  stopTimer(); nav(''); where('Finished');
+  showStop(false);
+  await saveSection('final', { minutes: sittingMinutes(), status: 'Complete' });
+  try { localStorage.removeItem('toefl_resume'); } catch (e) {}
+  const drawn = () => {
+    const bad = S.unsaved.length;
+    let html = '<div class="card"><h1>You\'re finished! 🎉</h1><p>Great work, ' + esc(S.student.name.split(' ')[0]) + '. Please raise your hand and wait for your teacher.</p>';
+    if (S.modeKey === 'practice' && S.reading && S.listening && S.reading.band && S.listening.band) {
+      html += '<div class="row" style="gap:40px;margin-top:16px"><div><div class="muted small">Reading (estimate)</div><div class="score">' + S.reading.band.toFixed(1) + '</div></div>' +
+        '<div><div class="muted small">Listening (estimate)</div><div class="score">' + S.listening.band.toFixed(1) + '</div></div></div>' +
+        '<p class="muted small">Practice estimates on the TOEFL 1–6 scale. Writing and Speaking are scored by your teacher.</p>';
+    }
+    if (bad) {
+      html += '<div class="errbox"><b>Some results did not save.</b> Teacher: check the internet connection, then press Retry. Do not close this page.' +
+        '<p style="margin:10px 0 0"><button class="btn" id="retry">Retry saving</button></p>' +
+        '<details style="margin-top:10px"><summary class="small">Backup copy (teacher only)</summary><textarea class="resp" readonly style="min-height:120px;font-size:12px">' + esc(JSON.stringify(S.unsaved)) + '</textarea></details></div>';
+    } else {
+      html += '<p class="status-ok" style="margin-top:14px">✓ Your answers have been saved.</p>';
+    }
+    if (S.recFails) html += '<div class="warnbox">' + S.recFails + ' speaking recording(s) did not upload. Teacher: the speaking score may need to be done in person.</div>';
+    html += '</div>';
+    render(html);
+    if ($('#retry')) $('#retry').onclick = async () => {
+      $('#retry').disabled = true; $('#retry').textContent = 'Saving…';
+      const list = S.unsaved.splice(0);
+      for (const p of list) { try { await callRetry('saveSection', p, 2); } catch (e) { S.unsaved.push(p); } }
+      if (!S.unsaved.length) { try { localStorage.removeItem('toefl_backup_' + S.sessionId); } catch (x) {} }
+      drawn();
+    };
+  };
+  drawn();
+}
+
+/* =====================================================================
+   RUN
+   ===================================================================== */
+window.addEventListener('beforeunload', e => { if (S.inTest || S.unsaved.length) { e.preventDefault(); e.returnValue = ''; } });
+
+(async function main() {
+  render('<div class="card"><h2>Loading the test…</h2><p class="muted">This takes a few seconds.</p></div>');
+  try { await loadTest(); }
+  catch (e) {
+    render('<div class="card"><h2>The test could not load</h2><p>' + esc(e.message || e) + '</p><p class="muted">Check the internet connection and reload the page. If it keeps happening, tell your teacher.</p></div>');
+    return;
+  }
+  S.modeKey = CONFIG.mode;
+  $('#stopBtn').onclick = () => stopAndSave(true);
+  await signIn();
+  if (S.resumed && !nextPart()) { await finishScreen(); return; }
+  await deviceCheck();
+  S.inTest = true;
+  S.sittingStart = Date.now();
+  if (S.resumed) {
+    await saveSection('resume', {});
+    await message('Welcome back, ' + S.student.name.split(' ')[0], '<p>Your finished parts are saved. You will start at <b>' + esc(PART_NAMES[nextPart()]) + '</b>.</p>', 'Continue');
+  } else {
+    S.started = new Date().toISOString();
+    await saveSection('start', {});
+  }
+  const RUN = { reading: readingSection, listening: listeningSection, writing: writingSection, speaking: speakingSection };
+  for (const p of PARTS) {
+    if (S.done.indexOf(p) >= 0) continue;
+    await RUN[p]();
+    if (S.stopped) return;
+  }
+  await finishScreen();
+})();
+</script>
+</body>
+</html>
